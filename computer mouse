@@ -1,0 +1,23 @@
+@port 12_001
+
+  def start(), do: GenServer.start_link(__MODULE__, [], name: __MODULE__)
+
+  def rec(), do: GenServer.call(__MODULE__, :rec)
+ 
+  def init([]) do
+    {:ok, socket} = GenTCP.listen(@port, @tcp_options)
+    :ok = Inet.setopts(socket, active: :once)
+    {:ok, %State{socket: socket}}
+  end
+
+  def handle_cast({:rec}, %State{socket: socket} = state) do
+    :ok = gen_tcp_accept(socket)
+    {:noreply, state}
+  end
+
+  def gen_tcp(socket) do
+    case GenTCP.accept(socket) do
+      {_, _, data} -> {:error, data}
+      _ -> "something is wrong"
+    end
+  end
